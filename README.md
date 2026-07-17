@@ -41,8 +41,9 @@ An Android SDK and JDK 17 are additionally required for APK builds. The project 
 
 ## Support / Поддержать проект
 
-Please verify the network before sending funds. The project accepts only the
-addresses below; cards and Telegram Stars are not used.
+If Aperture Grafik makes your shifts a little easier to manage, thank you for
+supporting the project. It helps keep the app local, simple, and actively
+maintained. Please double-check the network before sending anything.
 
 - Bitcoin (BTC, Bitcoin network): `bc1qhft9dxkn0g07zm9ht8zrfqyrh85djhueu4q49k`
 - Ethereum (ETH, Ethereum network): `0x5311B0318A24F63196A572b447609bc336A4C7b2`
