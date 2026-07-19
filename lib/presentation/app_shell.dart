@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../application/app_controller.dart';
 import '../core/l10n/strings.dart';
+import '../core/theme/app_theme.dart';
 import '../domain/models.dart';
 import '../domain/revenue_recommendation_service.dart';
 import '../domain/schedule_service.dart';
@@ -35,33 +36,44 @@ class _AppShellState extends ConsumerState<AppShell> {
       StatisticsPage(data: data),
       ProfilePage(data: data),
     ];
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: SafeArea(child: pages[index]),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (value) => setState(() => index = value),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: strings.home,
+      body: IndexedStack(index: index, children: pages),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: scheme.outlineVariant.withValues(alpha: .7)),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.calendar_month_outlined),
-            selectedIcon: const Icon(Icons.calendar_month),
-            label: strings.calendar,
+        ),
+        child: SafeArea(
+          top: false,
+          child: NavigationBar(
+            selectedIndex: index,
+            onDestinationSelected: (value) => setState(() => index = value),
+            destinations: [
+              NavigationDestination(
+                icon: const Icon(Icons.local_cafe_outlined),
+                selectedIcon: const Icon(Icons.local_cafe_rounded),
+                label: strings.home,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.calendar_month_outlined),
+                selectedIcon: const Icon(Icons.calendar_month_rounded),
+                label: strings.calendar,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.insights_outlined),
+                selectedIcon: const Icon(Icons.insights_rounded),
+                label: strings.statistics,
+              ),
+              NavigationDestination(
+                icon: const Icon(Icons.tune_outlined),
+                selectedIcon: const Icon(Icons.tune_rounded),
+                label: strings.profile,
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.bar_chart_outlined),
-            selectedIcon: const Icon(Icons.bar_chart),
-            label: strings.statistics,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.person),
-            label: strings.profile,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -154,20 +166,48 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(titles[_step]),
+        title: Row(
+          children: [
+            const Icon(Icons.local_cafe_rounded, size: 24),
+            const SizedBox(width: 10),
+            Expanded(child: Text(titles[_step])),
+          ],
+        ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(child: Text('${_step + 1}/5')),
+            padding: const EdgeInsets.only(right: 20),
+            child: Center(
+              child: Text(
+                '${_step + 1}/5',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: _page(isRu)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: (_step + 1) / 5,
+                minHeight: 6,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: KeyedSubtree(key: ValueKey(_step), child: _page(isRu)),
+              ),
+            ),
+            const SizedBox(height: 16),
             FilledButton(
               onPressed: _step == 4
                   ? _finish
@@ -190,23 +230,49 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _page(bool isRu) => switch (_step) {
-    0 => Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+    0 => ListView(
+      padding: const EdgeInsets.only(top: 20, bottom: 12),
       children: [
-        Icon(
-          Icons.schedule_rounded,
-          size: 88,
-          color: Theme.of(context).colorScheme.primary,
+        Container(
+          width: 132,
+          height: 132,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.coffee_rounded,
+            size: 70,
+            color: Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 28),
+        Text(
+          'APERTURE GRAFIK',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            letterSpacing: 1.8,
+          ),
+        ),
+        const SizedBox(height: 10),
         Text(
           isRu
-              ? 'Ваш личный график работы и заработок'
-              : 'Your personal work schedule and pay',
+              ? 'Смены в кофейне — спокойно и по делу'
+              : 'Coffee-shop shifts, kept simple',
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge,
+          style: Theme.of(context).textTheme.headlineSmall,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 10),
+        Text(
+          isRu
+              ? 'График, команда, выручка и заработок всегда под рукой.'
+              : 'Your schedule, team, revenue, and earnings in one place.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 36),
         SegmentedButton<AppLanguage>(
           segments: const [
             ButtonSegment(value: AppLanguage.russian, label: Text('Русский')),
@@ -253,7 +319,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
       ],
     ),
-    2 => Column(
+    2 => ListView(
+      padding: const EdgeInsets.only(bottom: 12),
       children: [
         TextField(
           controller: _rate,
@@ -281,8 +348,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       ],
     ),
-    3 => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    3 => ListView(
+      padding: const EdgeInsets.only(bottom: 12),
       children: [
         Text(
           isRu ? 'С кем вы обычно работаете?' : 'Who do you usually work with?',
@@ -326,7 +393,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
       ],
     ),
-    _ => Column(
+    _ => ListView(
+      padding: const EdgeInsets.only(bottom: 12),
       children: [
         _TimeTile(
           label: isRu ? 'Начало' : 'Start',
@@ -395,11 +463,14 @@ class HomePage extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         children: [
-          Text(
-            DateFormat.yMMMMEEEEd(strings.isRu ? 'ru_RU' : 'en_US').format(now),
-            style: Theme.of(context).textTheme.bodyMedium,
+          _HomeGreeting(
+            date: DateFormat.yMMMMEEEEd(
+              strings.isRu ? 'ru_RU' : 'en_US',
+            ).format(now),
+            hour: now.hour,
+            isRussian: strings.isRu,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 22),
           _HeroCard(
             title: planned
                 ? (active
@@ -415,15 +486,12 @@ class HomePage extends ConsumerWidget {
                 ? Icons.work_history_outlined
                 : Icons.weekend_outlined,
           ),
-          if (recommendation != null) ...[
-            const SizedBox(height: 8),
-            _RevenueRecommendationCard(
-              recommendation: recommendation,
-              data: data,
-              isRussian: strings.isRu,
-            ),
-          ],
-          const SizedBox(height: 20),
+          const SizedBox(height: 22),
+          _SectionTitle(
+            existing != null
+                ? (strings.isRu ? 'Итоги дня' : 'Today’s result')
+                : (strings.isRu ? 'Данные смены' : 'Shift details'),
+          ),
           if (completionDate != null)
             _InlineShiftCompletionForm(
               data: data,
@@ -449,7 +517,18 @@ class HomePage extends ConsumerWidget {
                     : (strings.isRu ? 'Добавить смену' : 'Add shift'),
               ),
             ),
-          const SizedBox(height: 12),
+          if (recommendation != null) ...[
+            const SizedBox(height: 22),
+            _SectionTitle(
+              strings.isRu ? 'Ориентир на сегодня' : 'Today’s outlook',
+            ),
+            _RevenueRecommendationCard(
+              recommendation: recommendation,
+              data: data,
+              isRussian: strings.isRu,
+            ),
+          ],
+          const SizedBox(height: 14),
           OutlinedButton.icon(
             onPressed: () => showShiftEditor(
               context,
@@ -457,7 +536,7 @@ class HomePage extends ConsumerWidget {
               date: today,
               kind: ShiftKind.extra,
             ),
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_circle_outline_rounded),
             label: Text(strings.isRu ? 'Внеплановая смена' : 'Extra shift'),
           ),
         ],
@@ -502,28 +581,32 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           kind: planned ? ShiftKind.scheduled : ShiftKind.extra,
           existing: shift,
         ),
-        child: Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: shift != null
-                ? Theme.of(context).colorScheme.primaryContainer
-                : planned
-                ? Theme.of(context).colorScheme.secondaryContainer
-                : null,
-            borderRadius: BorderRadius.circular(16),
-            border: today
-                ? Border.all(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  )
-                : null,
-          ),
-          child: Text(
-            '${date.day}',
-            style: TextStyle(
-              fontWeight: shift != null || today
-                  ? FontWeight.bold
-                  : FontWeight.normal,
+        child: Center(
+          child: Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: shift != null
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : planned
+                  ? Theme.of(context).colorScheme.secondaryContainer
+                  : null,
+              borderRadius: BorderRadius.circular(14),
+              border: today
+                  ? Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    )
+                  : null,
+            ),
+            child: Text(
+              '${date.day}',
+              style: TextStyle(
+                fontWeight: shift != null || today
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
             ),
           ),
         ),
@@ -552,7 +635,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         ),
       ],
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -600,10 +683,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             crossAxisCount: 7,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 0,
             children: days,
           ),
+          const SizedBox(height: 14),
+          _CalendarLegend(isRussian: strings.isRu),
           const SizedBox(height: 28),
           Text(
             strings.isRu ? 'Завершённые смены' : 'Completed shifts',
@@ -704,22 +789,36 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage> {
             onSelectionChanged: (set) => setState(() => range = set.first),
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _MetricCard(
-                  label: strings.revenue,
-                  value: money(data, revenue),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MetricCard(
-                  label: strings.earnings,
-                  value: money(data, earnings),
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final scaledText = MediaQuery.textScalerOf(context).scale(16);
+              final stackCards = constraints.maxWidth < 350 || scaledText > 21;
+              final cardWidth = stackCards
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - 12) / 2;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: cardWidth,
+                    child: _MetricCard(
+                      label: strings.revenue,
+                      value: money(data, revenue),
+                      icon: Icons.point_of_sale_rounded,
+                    ),
+                  ),
+                  SizedBox(
+                    width: cardWidth,
+                    child: _MetricCard(
+                      label: strings.earnings,
+                      value: money(data, earnings),
+                      icon: Icons.savings_outlined,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 20),
           Card(
@@ -793,6 +892,8 @@ class ProfilePage extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [
+          _CoffeeProfileHeader(data: data, isRussian: strings.isRu),
+          const SizedBox(height: 22),
           _SectionTitle(strings.isRu ? 'Настройки' : 'Settings'),
           _SettingsTile(
             icon: Icons.language,
@@ -808,17 +909,18 @@ class ProfilePage extends ConsumerWidget {
             subtitle: _themeName(data.settings.themeMode, strings.isRu),
             onTap: () => _selectTheme(context, data, controller),
           ),
-          SwitchListTile.adaptive(
+          _SettingsSwitch(
             value: data.settings.notificationsEnabled,
             onChanged: (value) => controller.updateSettings(
               data.settings.copyWith(notificationsEnabled: value),
             ),
-            secondary: const Icon(Icons.notifications_outlined),
-            title: Text(
-              strings.isRu
-                  ? 'Напоминание в конце смены'
-                  : 'End-of-shift reminder',
-            ),
+            icon: Icons.notifications_outlined,
+            title: strings.isRu
+                ? 'Напоминание в конце смены'
+                : 'End-of-shift reminder',
+            subtitle: strings.isRu
+                ? 'Повтор каждые 30 минут, пока смена не заполнена'
+                : 'Every 30 minutes until the shift is completed',
           ),
           const SizedBox(height: 18),
           _SectionTitle(strings.isRu ? 'Работа' : 'Work'),
@@ -997,24 +1099,17 @@ class _ShiftEditorState extends ConsumerState<_ShiftEditor> {
             ).format(widget.date),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _TimeTile(
-                  label: strings.isRu ? 'Начало' : 'Start',
-                  value: DateFormat.Hm().format(start),
-                  onTap: () => _time(true),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _TimeTile(
-                  label: strings.isRu ? 'Конец' : 'End',
-                  value: DateFormat.Hm().format(end),
-                  onTap: () => _time(false),
-                ),
-              ),
-            ],
+          _AdaptiveTimeFields(
+            start: _TimeTile(
+              label: strings.isRu ? 'Начало' : 'Start',
+              value: DateFormat.Hm().format(start),
+              onTap: () => _time(true),
+            ),
+            end: _TimeTile(
+              label: strings.isRu ? 'Конец' : 'End',
+              value: DateFormat.Hm().format(end),
+              onTap: () => _time(false),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -1040,6 +1135,7 @@ class _ShiftEditorState extends ConsumerState<_ShiftEditor> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: strings.revenue,
+              prefixIcon: const Icon(Icons.point_of_sale_rounded),
               suffixText: '₽',
             ),
           ),
@@ -1048,6 +1144,7 @@ class _ShiftEditorState extends ConsumerState<_ShiftEditor> {
             controller: comment,
             maxLines: 3,
             decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.notes_rounded),
               labelText: strings.isRu
                   ? 'Комментарий (необязательно)'
                   : 'Comment (optional)',
@@ -1099,9 +1196,82 @@ class _PageScaffold extends StatelessWidget {
   final List<Widget>? actions;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title), actions: actions),
+    appBar: AppBar(
+      title: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.local_cafe_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(title)),
+        ],
+      ),
+      actions: actions,
+    ),
     body: child,
   );
+}
+
+class _HomeGreeting extends StatelessWidget {
+  const _HomeGreeting({
+    required this.date,
+    required this.hour,
+    required this.isRussian,
+  });
+
+  final String date;
+  final int hour;
+  final bool isRussian;
+
+  @override
+  Widget build(BuildContext context) {
+    final greeting = hour < 12
+        ? (isRussian ? 'Доброе утро' : 'Good morning')
+        : hour < 18
+        ? (isRussian ? 'Добрый день' : 'Good afternoon')
+        : (isRussian ? 'Добрый вечер' : 'Good evening');
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(greeting, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 5),
+              Text(
+                date,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 16),
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: scheme.secondaryContainer,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(Icons.coffee_rounded, color: scheme.onSecondaryContainer),
+        ),
+      ],
+    );
+  }
 }
 
 class _HeroCard extends StatelessWidget {
@@ -1114,53 +1284,125 @@ class _HeroCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              icon,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final endColor = Color.lerp(scheme.primary, Colors.black, .22)!;
+    return Semantics(
+      container: true,
+      label: '$title, $subtitle',
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 164),
+        padding: const EdgeInsets.all(22),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [scheme.primary, endColor],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.primary.withValues(alpha: .2),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -14,
+              bottom: -22,
+              child: Icon(
+                Icons.coffee_rounded,
+                size: 126,
+                color: scheme.onPrimary.withValues(alpha: .11),
+              ),
+            ),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(subtitle),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.onPrimary.withValues(alpha: .14),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 18, color: scheme.onPrimary),
+                      const SizedBox(width: 8),
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: scheme.onPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Text(
+                  subtitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(color: scheme.onPrimary),
+                ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value});
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
   final String label;
   final String value;
+  final IconData icon;
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: 8),
-          Text(value, style: Theme.of(context).textTheme.titleLarge),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSecondaryContainer,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: Theme.of(context).textTheme.titleLarge),
+          ),
         ],
       ),
     ),
@@ -1252,29 +1494,55 @@ class _InlineShiftCompletionFormState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              strings.isRu ? 'Заполните смену' : 'Fill in shift',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: _TimeTile(
-                    label: strings.isRu ? 'Начало' : 'Start',
-                    value: DateFormat.Hm().format(_start),
-                    onTap: () => _pickTime(true),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long_rounded,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _TimeTile(
-                    label: strings.isRu ? 'Конец' : 'End',
-                    value: DateFormat.Hm().format(_end),
-                    onTap: () => _pickTime(false),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        strings.isRu ? 'Заполните смену' : 'Fill in shift',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        strings.isRu
+                            ? 'Время, команда и выручка за день'
+                            : 'Time, team, and today’s revenue',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            _AdaptiveTimeFields(
+              start: _TimeTile(
+                label: strings.isRu ? 'Начало' : 'Start',
+                value: DateFormat.Hm().format(_start),
+                onTap: () => _pickTime(true),
+              ),
+              end: _TimeTile(
+                label: strings.isRu ? 'Конец' : 'End',
+                value: DateFormat.Hm().format(_end),
+                onTap: () => _pickTime(false),
+              ),
             ),
             const SizedBox(height: 20),
             Text(
@@ -1314,6 +1582,7 @@ class _InlineShiftCompletionFormState
               ),
               decoration: InputDecoration(
                 labelText: strings.revenue,
+                prefixIcon: const Icon(Icons.point_of_sale_rounded),
                 suffixText: '₽',
               ),
             ),
@@ -1322,6 +1591,7 @@ class _InlineShiftCompletionFormState
               controller: _comment,
               maxLines: 2,
               decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.notes_rounded),
                 labelText: strings.isRu
                     ? 'Комментарий (необязательно)'
                     : 'Comment (optional)',
@@ -1330,7 +1600,7 @@ class _InlineShiftCompletionFormState
             const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: _save,
-              icon: const Icon(Icons.check_circle_outline),
+              icon: const Icon(Icons.check_circle_rounded),
               label: Text(strings.isRu ? 'Заполнить' : 'Complete'),
             ),
           ],
@@ -1360,7 +1630,7 @@ class _RevenueRecommendationCard extends StatelessWidget {
               ? 'Рекомендация появится после 3 заполненных смен'
               : 'Recommendation is available after 3 completed shifts');
     return Card(
-      color: scheme.secondaryContainer,
+      color: scheme.tertiaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -1368,15 +1638,25 @@ class _RevenueRecommendationCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.auto_graph_rounded,
-                  color: scheme.onSecondaryContainer,
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: scheme.tertiary,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.trending_up_rounded,
+                    color: scheme.onTertiary,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     text,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: scheme.onTertiaryContainer,
+                    ),
                   ),
                 ),
               ],
@@ -1453,32 +1733,86 @@ class _SummaryCard extends StatelessWidget {
   final Shift shift;
   final AppState data;
   @override
-  Widget build(BuildContext context) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            Strings(data.settings.language).isRu
-                ? 'Смена завершена'
-                : 'Shift completed',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            '${Strings(data.settings.language).revenue}: ${money(data, shift.revenueMinor)}',
-          ),
-          Text(
-            '${Strings(data.settings.language).earnings}: ${money(data, shift.earningsMinor)}',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
+  Widget build(BuildContext context) {
+    final strings = Strings(data.settings.language);
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: scheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(
+                    Icons.check_rounded,
+                    color: scheme.onTertiaryContainer,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    strings.isRu ? 'Смена завершена' : 'Shift completed',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+            _SummaryLine(
+              label: strings.revenue,
+              value: money(data, shift.revenueMinor),
+            ),
+            const Divider(height: 22),
+            _SummaryLine(
+              label: strings.earnings,
+              value: money(data, shift.earningsMinor),
+              emphasized: true,
+            ),
+          ],
+        ),
       ),
-    ),
+    );
+  }
+}
+
+class _SummaryLine extends StatelessWidget {
+  const _SummaryLine({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Text(
+        value,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: emphasized ? Theme.of(context).colorScheme.primary : null,
+        ),
+      ),
+    ],
   );
 }
 
@@ -1495,6 +1829,18 @@ class _HistoryRow extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ListTile(
       onTap: onTap,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          Icons.coffee_outlined,
+          color: Theme.of(context).colorScheme.onSecondaryContainer,
+        ),
+      ),
       title: Text(
         DateFormat.MMMMd(
           Strings(data.settings.language).isRu ? 'ru_RU' : 'en_US',
@@ -1530,7 +1876,18 @@ class _InfoCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Theme.of(context).colorScheme.primary),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              icon,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1585,14 +1942,38 @@ class _TimeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => InkWell(
     onTap: onTap,
-    borderRadius: BorderRadius.circular(14),
+    borderRadius: BorderRadius.circular(18),
     child: InputDecorator(
       decoration: InputDecoration(
         labelText: label,
-        suffixIcon: const Icon(Icons.schedule),
+        suffixIcon: const Icon(Icons.schedule_rounded),
       ),
       child: Text(value, style: Theme.of(context).textTheme.titleMedium),
     ),
+  );
+}
+
+class _AdaptiveTimeFields extends StatelessWidget {
+  const _AdaptiveTimeFields({required this.start, required this.end});
+
+  final Widget start;
+  final Widget end;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final scaledText = MediaQuery.textScalerOf(context).scale(16);
+      if (constraints.maxWidth < 340 || scaledText > 21) {
+        return Column(children: [start, const SizedBox(height: 12), end]);
+      }
+      return Row(
+        children: [
+          Expanded(child: start),
+          const SizedBox(width: 12),
+          Expanded(child: end),
+        ],
+      );
+    },
   );
 }
 
@@ -1601,8 +1982,15 @@ class _SectionTitle extends StatelessWidget {
   final String value;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text(value, style: Theme.of(context).textTheme.titleSmall),
+    padding: const EdgeInsets.only(left: 4, bottom: 8),
+    child: Text(
+      value.toUpperCase(),
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.1,
+      ),
+    ),
   );
 }
 
@@ -1621,11 +2009,206 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) => Card(
     child: ListTile(
       onTap: onTap,
-      leading: Icon(icon),
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          icon,
+          size: 22,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const Icon(Icons.chevron_right_rounded),
     ),
+  );
+}
+
+class _SettingsSwitch extends StatelessWidget {
+  const _SettingsSwitch({
+    required this.value,
+    required this.onChanged,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: SwitchListTile.adaptive(
+      value: value,
+      onChanged: onChanged,
+      secondary: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primaryContainer,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Icon(
+          icon,
+          size: 22,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
+        ),
+      ),
+      title: Text(title),
+      subtitle: Text(subtitle),
+    ),
+  );
+}
+
+class _ThemePreview extends StatelessWidget {
+  const _ThemePreview({required this.mode});
+
+  final AppThemeMode mode;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = AppTheme.forMode(mode).colorScheme;
+    return SizedBox(
+      width: 54,
+      height: 30,
+      child: Stack(
+        children: [
+          _ThemeDot(color: scheme.surface, left: 0),
+          _ThemeDot(color: scheme.primaryContainer, left: 12),
+          _ThemeDot(color: scheme.primary, left: 24),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThemeDot extends StatelessWidget {
+  const _ThemeDot({required this.color, required this.left});
+
+  final Color color;
+  final double left;
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    left: left,
+    top: 2,
+    child: Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+    ),
+  );
+}
+
+class _CoffeeProfileHeader extends StatelessWidget {
+  const _CoffeeProfileHeader({required this.data, required this.isRussian});
+
+  final AppState data;
+  final bool isRussian;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: scheme.secondary,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.coffee_rounded, color: scheme.onSecondary),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isRussian ? 'Моя кофейня' : 'My coffee shop',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '${_scheduleName(data.schedule.type, isRussian)} · '
+                  '${data.schedule.start.format()}–${data.schedule.end.format()}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CalendarLegend extends StatelessWidget {
+  const _CalendarLegend({required this.isRussian});
+
+  final bool isRussian;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 14,
+    runSpacing: 8,
+    children: [
+      _LegendItem(
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        label: isRussian ? 'По графику' : 'Scheduled',
+      ),
+      _LegendItem(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        label: isRussian ? 'Заполнено' : 'Completed',
+      ),
+    ],
+  );
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+      const SizedBox(width: 7),
+      Text(label, style: Theme.of(context).textTheme.labelMedium),
+    ],
   );
 }
 
@@ -1667,7 +2250,15 @@ Future<void> _selectTheme(
           .map(
             (item) => SimpleDialogOption(
               onPressed: () => Navigator.pop(context, item),
-              child: Text(_themeName(item, ru)),
+              child: Row(
+                children: [
+                  _ThemePreview(mode: item),
+                  const SizedBox(width: 14),
+                  Expanded(child: Text(_themeName(item, ru))),
+                  if (item == data.settings.themeMode)
+                    const Icon(Icons.check_rounded),
+                ],
+              ),
             ),
           )
           .toList(),
@@ -2180,8 +2771,8 @@ String _scheduleDescription(ScheduleType type, bool ru) => switch (type) {
   ScheduleType.weekdays => ru ? 'Выберите нужные дни' : 'Choose your days',
 };
 String _themeName(AppThemeMode mode, bool ru) => switch (mode) {
-  AppThemeMode.standard => ru ? 'Обычная Material 3' : 'Standard Material 3',
-  AppThemeMode.laboratory => ru ? 'Лабораторная' : 'Laboratory',
-  AppThemeMode.aperture => ru ? 'Сине-оранжевая' : 'Blue and orange',
-  AppThemeMode.chamber => ru ? 'Контрастная камера' : 'Contrast chamber',
+  AppThemeMode.standard => ru ? 'Светлая обжарка' : 'Light roast',
+  AppThemeMode.laboratory => ru ? 'Молочный латте' : 'Milky latte',
+  AppThemeMode.aperture => ru ? 'Карамельный раф' : 'Caramel roast',
+  AppThemeMode.chamber => ru ? 'Ночной эспрессо' : 'Night espresso',
 };

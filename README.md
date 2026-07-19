@@ -7,7 +7,8 @@ Offline-first Android MVP for café shift schedules, daily revenue and pay track
 - Onboarding in Russian or English.
 - 3/3, 2/2, 5/2 and weekday schedules; shifts may end after midnight.
 - Local SQLite persistence, manual extra shifts, edit/delete history and pay calculation.
-- Four original Material 3 themes, RUB-only formatting, local revenue recommendations, charts and end-of-shift reminders.
+- A warm coffee-shop Material 3 design with four original palettes: Light roast, Milky latte, Caramel roast and Night espresso.
+- Adaptive layouts, 48 dp touch targets, RUB-only formatting, local revenue recommendations, charts and end-of-shift reminders.
 - Revenue recommendations stay on-device: recent completed shifts and weekday patterns provide a practical reference range and a higher-than-usual warning. No order data leaves the phone.
 - JSON backup export/import. Backups are intentionally **not encrypted**; do not share them publicly.
 
